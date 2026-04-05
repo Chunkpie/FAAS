@@ -1,0 +1,1373 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Freight Audit Automation System API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: clients
+    description: Client management
+  - name: transporters
+    description: Transporter management
+  - name: ratecards
+    description: Rate card management
+  - name: bols
+    description: Bill of Lading records
+  - name: invoices
+    description: Invoice management
+  - name: audit
+    description: Audit engine
+  - name: exceptions
+    description: Exception management
+  - name: reports
+    description: Report generation
+  - name: dashboard
+    description: Dashboard summary
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clients:
+    get:
+      operationId: listClients
+      tags: [clients]
+      summary: List all clients
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+    post:
+      operationId: createClient
+      tags: [clients]
+      summary: Create a new client
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClientBody"
+      responses:
+        "201":
+          description: Created client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get a single client
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateClient
+      tags: [clients]
+      summary: Update a client
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateClientBody"
+      responses:
+        "200":
+          description: Updated client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+    delete:
+      operationId: deleteClient
+      tags: [clients]
+      summary: Delete a client
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /transporters:
+    get:
+      operationId: listTransporters
+      tags: [transporters]
+      summary: List transporters
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: clientId
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of transporters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transporter"
+    post:
+      operationId: createTransporter
+      tags: [transporters]
+      summary: Create a transporter
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransporterBody"
+      responses:
+        "201":
+          description: Created transporter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transporter"
+
+  /transporters/{id}:
+    patch:
+      operationId: updateTransporter
+      tags: [transporters]
+      summary: Update a transporter
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTransporterBody"
+      responses:
+        "200":
+          description: Updated transporter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transporter"
+    delete:
+      operationId: deleteTransporter
+      tags: [transporters]
+      summary: Delete a transporter
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /rate-cards:
+    get:
+      operationId: listRateCards
+      tags: [ratecards]
+      summary: List rate cards
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: clientId
+          schema:
+            type: ["integer", "null"]
+        - in: query
+          name: transporterId
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of rate cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RateCard"
+    post:
+      operationId: createRateCard
+      tags: [ratecards]
+      summary: Create a rate card
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRateCardBody"
+      responses:
+        "201":
+          description: Created rate card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateCard"
+
+  /rate-cards/{id}:
+    patch:
+      operationId: updateRateCard
+      tags: [ratecards]
+      summary: Update a rate card
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRateCardBody"
+      responses:
+        "200":
+          description: Updated rate card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateCard"
+    delete:
+      operationId: deleteRateCard
+      tags: [ratecards]
+      summary: Delete a rate card
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /bols:
+    get:
+      operationId: listBols
+      tags: [bols]
+      summary: List BOLs
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: clientId
+          schema:
+            type: ["integer", "null"]
+        - in: query
+          name: transporterId
+          schema:
+            type: ["integer", "null"]
+        - in: query
+          name: search
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of BOLs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bol"
+    post:
+      operationId: createBol
+      tags: [bols]
+      summary: Create a BOL
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBolBody"
+      responses:
+        "201":
+          description: Created BOL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bol"
+
+  /bols/{id}:
+    get:
+      operationId: getBol
+      tags: [bols]
+      summary: Get a single BOL
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: BOL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bol"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateBol
+      tags: [bols]
+      summary: Update a BOL
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBolBody"
+      responses:
+        "200":
+          description: Updated BOL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bol"
+    delete:
+      operationId: deleteBol
+      tags: [bols]
+      summary: Delete a BOL
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /bols/unbilled:
+    get:
+      operationId: listUnbilledBols
+      tags: [bols]
+      summary: List BOLs not linked to any invoice (unbilled shipments)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of unbilled BOLs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bol"
+
+  /invoices:
+    get:
+      operationId: listInvoices
+      tags: [invoices]
+      summary: List invoices
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: clientId
+          schema:
+            type: ["integer", "null"]
+        - in: query
+          name: transporterId
+          schema:
+            type: ["integer", "null"]
+        - in: query
+          name: status
+          schema:
+            type: ["string", "null"]
+        - in: query
+          name: search
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+    post:
+      operationId: createInvoice
+      tags: [invoices]
+      summary: Create an invoice with BOL mappings and run audit
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvoiceBody"
+      responses:
+        "201":
+          description: Created invoice with audit result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}:
+    get:
+      operationId: getInvoice
+      tags: [invoices]
+      summary: Get a single invoice with full audit details
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invoice with audit details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoiceDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateInvoice
+      tags: [invoices]
+      summary: Update invoice (remark, resolved status)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInvoiceBody"
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+    delete:
+      operationId: deleteInvoice
+      tags: [invoices]
+      summary: Delete an invoice
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /invoices/{id}/reaudit:
+    post:
+      operationId: reauditInvoice
+      tags: [audit]
+      summary: Re-run audit for an invoice
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Audit result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /exceptions:
+    get:
+      operationId: listExceptions
+      tags: [exceptions]
+      summary: List failed and warning invoices
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: clientId
+          schema:
+            type: ["integer", "null"]
+        - in: query
+          name: resolved
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of exception invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+
+  /exceptions/{id}/resolve:
+    patch:
+      operationId: resolveException
+      tags: [exceptions]
+      summary: Mark exception as resolved with remark
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveExceptionBody"
+      responses:
+        "200":
+          description: Resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /reports/download:
+    get:
+      operationId: downloadReport
+      tags: [reports]
+      summary: Download Excel audit report
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: clientId
+          schema:
+            type: ["integer", "null"]
+        - in: query
+          name: transporterId
+          schema:
+            type: ["integer", "null"]
+        - in: query
+          name: status
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Excel file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Dashboard stats summary
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Summary stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/monthly-trends:
+    get:
+      operationId: getMonthlyTrends
+      tags: [dashboard]
+      summary: Monthly audit trends (last 6 months)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Monthly trends
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyTrend"
+
+  /dashboard/transporter-stats:
+    get:
+      operationId: getTransporterStats
+      tags: [dashboard]
+      summary: Transporter error percentage stats
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Transporter stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TransporterStat"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    LoginBody:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        role:
+          type: string
+          enum: [admin, auditor]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - username
+        - role
+        - createdAt
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        volumetricDivisor:
+          type: number
+        fuelRatePerKm:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - volumetricDivisor
+        - fuelRatePerKm
+        - createdAt
+
+    CreateClientBody:
+      type: object
+      properties:
+        name:
+          type: string
+        volumetricDivisor:
+          type: number
+        fuelRatePerKm:
+          type: number
+      required:
+        - name
+
+    UpdateClientBody:
+      type: object
+      properties:
+        name:
+          type: string
+        volumetricDivisor:
+          type: number
+        fuelRatePerKm:
+          type: number
+
+    Transporter:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        clientId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - clientId
+        - createdAt
+
+    CreateTransporterBody:
+      type: object
+      properties:
+        name:
+          type: string
+        clientId:
+          type: ["integer", "null"]
+      required:
+        - name
+
+    UpdateTransporterBody:
+      type: object
+      properties:
+        name:
+          type: string
+        clientId:
+          type: ["integer", "null"]
+
+    RateCard:
+      type: object
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        transporterId:
+          type: integer
+        pricingType:
+          type: string
+          enum: [weight, distance, hybrid]
+        ratePerKg:
+          type: ["number", "null"]
+        ratePerKm:
+          type: ["number", "null"]
+        fuelPerKm:
+          type: ["number", "null"]
+        effectiveFrom:
+          type: ["string", "null"]
+          format: date
+        effectiveTo:
+          type: ["string", "null"]
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - clientId
+        - transporterId
+        - pricingType
+        - ratePerKg
+        - ratePerKm
+        - fuelPerKm
+        - effectiveFrom
+        - effectiveTo
+        - createdAt
+
+    CreateRateCardBody:
+      type: object
+      properties:
+        clientId:
+          type: integer
+        transporterId:
+          type: integer
+        pricingType:
+          type: string
+          enum: [weight, distance, hybrid]
+        ratePerKg:
+          type: ["number", "null"]
+        ratePerKm:
+          type: ["number", "null"]
+        fuelPerKm:
+          type: ["number", "null"]
+        effectiveFrom:
+          type: ["string", "null"]
+        effectiveTo:
+          type: ["string", "null"]
+      required:
+        - clientId
+        - transporterId
+        - pricingType
+
+    UpdateRateCardBody:
+      type: object
+      properties:
+        pricingType:
+          type: string
+          enum: [weight, distance, hybrid]
+        ratePerKg:
+          type: ["number", "null"]
+        ratePerKm:
+          type: ["number", "null"]
+        fuelPerKm:
+          type: ["number", "null"]
+        effectiveFrom:
+          type: ["string", "null"]
+        effectiveTo:
+          type: ["string", "null"]
+
+    Bol:
+      type: object
+      properties:
+        id:
+          type: integer
+        bolNumber:
+          type: string
+        clientId:
+          type: integer
+        transporterId:
+          type: integer
+        origin:
+          type: string
+        destination:
+          type: string
+        distance:
+          type: number
+        actualWeight:
+          type: number
+        length:
+          type: ["number", "null"]
+        width:
+          type: ["number", "null"]
+        height:
+          type: ["number", "null"]
+        volumetricWeight:
+          type: ["number", "null"]
+        chargeableWeight:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        clientName:
+          type: ["string", "null"]
+        transporterName:
+          type: ["string", "null"]
+      required:
+        - id
+        - bolNumber
+        - clientId
+        - transporterId
+        - origin
+        - destination
+        - distance
+        - actualWeight
+        - length
+        - width
+        - height
+        - volumetricWeight
+        - chargeableWeight
+        - createdAt
+        - clientName
+        - transporterName
+
+    CreateBolBody:
+      type: object
+      properties:
+        bolNumber:
+          type: string
+        clientId:
+          type: integer
+        transporterId:
+          type: integer
+        origin:
+          type: string
+        destination:
+          type: string
+        distance:
+          type: number
+        actualWeight:
+          type: number
+        length:
+          type: ["number", "null"]
+        width:
+          type: ["number", "null"]
+        height:
+          type: ["number", "null"]
+      required:
+        - bolNumber
+        - clientId
+        - transporterId
+        - origin
+        - destination
+        - distance
+        - actualWeight
+
+    UpdateBolBody:
+      type: object
+      properties:
+        bolNumber:
+          type: string
+        origin:
+          type: string
+        destination:
+          type: string
+        distance:
+          type: number
+        actualWeight:
+          type: number
+        length:
+          type: ["number", "null"]
+        width:
+          type: ["number", "null"]
+        height:
+          type: ["number", "null"]
+
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: integer
+        invoiceNumber:
+          type: string
+        clientId:
+          type: integer
+        transporterId:
+          type: integer
+        invoiceAmount:
+          type: number
+        calculatedAmount:
+          type: ["number", "null"]
+        difference:
+          type: ["number", "null"]
+        status:
+          type: ["string", "null"]
+          enum: [PASS, WARNING, FAIL, null]
+        remark:
+          type: ["string", "null"]
+        resolved:
+          type: boolean
+        invoiceDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        clientName:
+          type: ["string", "null"]
+        transporterName:
+          type: ["string", "null"]
+        bolCount:
+          type: ["integer", "null"]
+      required:
+        - id
+        - invoiceNumber
+        - clientId
+        - transporterId
+        - invoiceAmount
+        - calculatedAmount
+        - difference
+        - status
+        - remark
+        - resolved
+        - invoiceDate
+        - createdAt
+        - clientName
+        - transporterName
+        - bolCount
+
+    InvoiceDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        invoiceNumber:
+          type: string
+        clientId:
+          type: integer
+        transporterId:
+          type: integer
+        invoiceAmount:
+          type: number
+        calculatedAmount:
+          type: ["number", "null"]
+        difference:
+          type: ["number", "null"]
+        status:
+          type: ["string", "null"]
+          enum: [PASS, WARNING, FAIL, null]
+        remark:
+          type: ["string", "null"]
+        resolved:
+          type: boolean
+        invoiceDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        clientName:
+          type: ["string", "null"]
+        transporterName:
+          type: ["string", "null"]
+        bolCount:
+          type: ["integer", "null"]
+        bols:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditedBol"
+      required:
+        - id
+        - invoiceNumber
+        - clientId
+        - transporterId
+        - invoiceAmount
+        - calculatedAmount
+        - difference
+        - status
+        - remark
+        - resolved
+        - invoiceDate
+        - createdAt
+        - clientName
+        - transporterName
+        - bolCount
+        - bols
+
+    AuditedBol:
+      type: object
+      properties:
+        id:
+          type: integer
+        bolNumber:
+          type: string
+        origin:
+          type: string
+        destination:
+          type: string
+        distance:
+          type: number
+        actualWeight:
+          type: number
+        volumetricWeight:
+          type: ["number", "null"]
+        chargeableWeight:
+          type: ["number", "null"]
+        baseCost:
+          type: ["number", "null"]
+        fuelCost:
+          type: ["number", "null"]
+        calculatedCost:
+          type: ["number", "null"]
+        validationIssues:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - bolNumber
+        - origin
+        - destination
+        - distance
+        - actualWeight
+        - volumetricWeight
+        - chargeableWeight
+        - baseCost
+        - fuelCost
+        - calculatedCost
+        - validationIssues
+
+    CreateInvoiceBody:
+      type: object
+      properties:
+        invoiceNumber:
+          type: string
+        clientId:
+          type: integer
+        transporterId:
+          type: integer
+        invoiceAmount:
+          type: number
+        invoiceDate:
+          type: string
+        bolNumbers:
+          type: array
+          items:
+            type: string
+      required:
+        - invoiceNumber
+        - clientId
+        - transporterId
+        - invoiceAmount
+        - invoiceDate
+        - bolNumbers
+
+    UpdateInvoiceBody:
+      type: object
+      properties:
+        remark:
+          type: ["string", "null"]
+        resolved:
+          type: boolean
+
+    ResolveExceptionBody:
+      type: object
+      properties:
+        remark:
+          type: string
+        resolved:
+          type: boolean
+      required:
+        - resolved
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalInvoices:
+          type: integer
+        totalBols:
+          type: integer
+        passCount:
+          type: integer
+        warningCount:
+          type: integer
+        failCount:
+          type: integer
+        totalOvercharge:
+          type: number
+        totalUndercharge:
+          type: number
+        totalDiscrepancy:
+          type: number
+        unresolvedExceptions:
+          type: integer
+        unbilledBols:
+          type: integer
+      required:
+        - totalInvoices
+        - totalBols
+        - passCount
+        - warningCount
+        - failCount
+        - totalOvercharge
+        - totalUndercharge
+        - totalDiscrepancy
+        - unresolvedExceptions
+        - unbilledBols
+
+    MonthlyTrend:
+      type: object
+      properties:
+        month:
+          type: string
+        pass:
+          type: integer
+        warning:
+          type: integer
+        fail:
+          type: integer
+        total:
+          type: integer
+      required:
+        - month
+        - pass
+        - warning
+        - fail
+        - total
+
+    TransporterStat:
+      type: object
+      properties:
+        transporterId:
+          type: integer
+        transporterName:
+          type: string
+        total:
+          type: integer
+        failed:
+          type: integer
+        errorPercent:
+          type: number
+      required:
+        - transporterId
+        - transporterName
+        - total
+        - failed
+        - errorPercent

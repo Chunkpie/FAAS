@@ -1,0 +1,309 @@
+Build a **production-ready full-stack SaaS web application** called **“Freight Audit Automation System (FAAS)”** for a logistics auditing company.
+
+The system must handle **BOL (Bill of Lading) to Invoice reconciliation**, freight cost calculation (including volumetric logic), audit validation, and Excel report generation.
+
+---
+
+# 🧠 CORE ARCHITECTURE
+
+Use:
+
+* Frontend: **Next.js (React) + Tailwind CSS**
+* Backend: **Node.js + Express**
+* Database: **PostgreSQL**
+* ORM: Prisma (preferred)
+* Excel Export: ExcelJS
+* Auth: JWT-based authentication
+
+---
+
+# 👥 USER ROLES
+
+1. Admin
+2. Auditor
+
+* Admin can manage clients, transporters, rates
+* Auditor can upload invoices, audit, generate reports
+
+---
+
+# 🏢 MULTI-CLIENT SYSTEM
+
+Each client must have isolated data:
+
+Client includes:
+
+* Name
+* Volumetric divisor (default 5000)
+* Fuel rate rules
+
+Each client has:
+
+* Transporters
+* Rate cards
+* BOL records
+
+---
+
+# 📦 BOL MODULE (CLIENT SIDE DATA)
+
+Create a BOL (Bill of Lading) system:
+
+Fields:
+
+* bol_number (unique)
+* client_id
+* transporter_id
+* origin
+* destination
+* distance
+* actual_weight
+* length, width, height
+* created_at
+
+---
+
+# 🧾 INVOICE MODULE (CARRIER SIDE DATA)
+
+Fields:
+
+* invoice_number
+* transporter_id
+* invoice_amount
+* date
+
+---
+
+# 🔗 BOL ↔ INVOICE MAPPING (CRITICAL)
+
+Create a mapping table:
+
+* invoice_id
+* bol_id
+
+Rules:
+
+* One invoice can have multiple BOLs
+* One BOL must NOT appear in multiple invoices
+
+---
+
+# ⚙️ RATE CARD SYSTEM
+
+Each client + transporter combination must support:
+
+* pricing_type: (weight / distance / hybrid)
+* rate_per_kg
+* rate_per_km
+* fuel_per_km
+* effective_date_range
+
+---
+
+# 📐 FREIGHT CALCULATION ENGINE
+
+Implement logic:
+
+Volumetric Weight = (L × W × H) / divisor
+Chargeable Weight = max(actual_weight, volumetric_weight)
+
+Base Cost:
+
+* Weight → chargeable_weight × rate_per_kg
+* Distance → distance × rate_per_km
+* Hybrid → both
+
+Fuel Cost:
+
+* distance × fuel_rate
+
+Total Expected Cost:
+
+* base_cost + fuel_cost
+
+---
+
+# 🔍 AUDIT ENGINE
+
+For each invoice:
+
+1. Fetch linked BOLs
+2. Sum calculated costs
+3. Compare with invoice_amount
+
+Status logic:
+
+* PASS → difference ≤ ₹50
+* WARNING → difference ≤ 5%
+* FAIL → difference > 5%
+
+---
+
+# 🚨 VALIDATION RULES (IMPORTANT)
+
+Implement:
+
+1. Duplicate BOL Detection
+   → Same BOL linked to multiple invoices = FAIL
+
+2. Missing BOL
+   → Invoice contains unknown BOL = FAIL
+
+3. Unbilled Shipment
+   → BOL exists but not mapped = WARNING
+
+4. Data mismatch
+   → Weight/distance mismatch between BOL & invoice
+
+---
+
+# 📊 DASHBOARD
+
+Show:
+
+* Total invoices
+* Total BOLs
+* Passed / Failed / Warning counts
+* Total overcharge detected
+* Charts:
+
+  * Monthly audit trends
+  * Transporter error %
+
+---
+
+# 📄 INVOICE ENTRY UI
+
+Form should allow:
+
+* Selecting client
+* Selecting transporter
+* Adding multiple BOL numbers (multi-select or input)
+* Enter invoice amount
+* Auto-calculate results on submit
+
+---
+
+# 🧾 EXCEL REPORT GENERATION
+
+Generate `.xlsx` file with:
+
+## Sheet 1: Full Audit Report
+
+Columns:
+
+* Invoice No
+* BOL No
+* Client
+* Transporter
+* Distance
+* Actual Weight
+* Volumetric Weight
+* Chargeable Weight
+* Invoice Amount
+* Calculated Amount
+* Difference
+* Status
+* Remark
+
+## Sheet 2: Summary
+
+* Total invoices
+* Passed / Failed / Warning
+* Total discrepancy amount
+
+## Sheet 3: Issues Only
+
+* Only WARNING + FAIL rows
+
+Apply conditional formatting:
+
+* PASS → Green
+* WARNING → Yellow
+* FAIL → Red
+
+---
+
+# 🚨 EXCEPTION MANAGEMENT
+
+Create a page:
+
+* Show only failed/warning invoices
+* Allow:
+
+  * Adding remarks
+  * Marking resolved
+
+---
+
+# ⚙️ ADMIN PANEL
+
+Admin can:
+
+* Create clients
+* Add transporters
+* Define rate cards
+* Update fuel rates
+* Set volumetric divisor
+
+---
+
+# 🔐 AUTHENTICATION
+
+* JWT login system
+* Role-based access control
+
+---
+
+# 📂 OPTIONAL (ADVANCED)
+
+* Upload invoice PDFs
+* Extract data using OCR (Google Vision API)
+
+---
+
+# 🎨 UI REQUIREMENTS
+
+* Modern SaaS dashboard
+
+* Sidebar navigation:
+
+  * Dashboard
+  * Invoices
+  * BOLs
+  * Reports
+  * Clients
+  * Settings
+
+* Data tables must support:
+
+  * Filtering (client, transporter, status)
+  * Sorting
+  * Search
+
+---
+
+# 🚀 FINAL REQUIREMENTS
+
+The app must:
+
+* Be fully functional end-to-end
+* Allow invoice creation + audit
+* Handle BOL mapping properly
+* Generate Excel reports
+* Have clean modular code structure
+
+---
+
+# 🧩 BUILD PRIORITY
+
+1. BOL + Invoice database
+2. Calculation engine
+3. Audit logic
+4. Excel export
+5. Dashboard
+6. Admin panel
+
+---
+
+Ensure the code is clean, modular, production-ready, and properly structured into frontend and backend directories with API routes and reusable components.
